@@ -29,6 +29,7 @@ async function run() {
     try {
         const usersCollection = client.db('fitness-tracker').collection('users')
         const trainersCollection = client.db('fitness-tracker').collection('trainers')
+        // const memberCollection = client.db('fitness-tracker').collection('member')
         const newsletterCollection = client.db('fitness-tracker').collection('newsLetter')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
 
@@ -52,7 +53,34 @@ async function run() {
             res.send(result)
         })
 
+        app.post('/addTrainer', async (req, res) => {
+            const user = req.body;
+            const result = await trainersCollection.insertOne(user);
+            res.send(result)
+        })
 
+        app.get('/roleTrainer', async (req, res) => {
+            // console.log(req.query.role);
+
+            let query = {}
+            if (req.query?.role) {
+                query = { role: req.query.role }
+            }
+            const result = await trainersCollection.find(query).toArray();
+            res.send(result)
+        })
+
+
+        app.get('/memberTrainer', async (req, res) => {
+            // console.log(req.query.role);
+
+            let query = {}
+            if (req.query?.role) {
+                query = { role: req.query.role }
+            }
+            const result = await trainersCollection.find(query).toArray();
+            res.send(result)
+        })
 
 
 
@@ -78,11 +106,7 @@ async function run() {
             const result = await usersCollection.insertOne(user)
         })
 
-        // app.get('/infinityImg', async (req, res) => {
-        //     const cursor = infinityCollection.find();
-        //     const result = await cursor.toArray()
-        //     res.send(result)
-        // })
+       
 
 
 
@@ -108,6 +132,13 @@ async function run() {
         })
 
 
+        //  infinity img Scroll
+
+        app.get("/infinityImg", async (req, res) => {
+            const cursor = infinityCollection.find();
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
