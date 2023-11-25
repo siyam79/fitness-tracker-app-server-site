@@ -2,7 +2,7 @@ const express = require('express')
 require("dotenv").config();
 const app = express()
 // const cookieParser = require('cookie-parser')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
 const cors = require('cors')
 // const jwt = require("jsonwebtoken");
@@ -11,10 +11,6 @@ const cors = require('cors')
 // middleware 
 app.use(express.json());
 app.use(cors())
-
-// 0KifGCskIIAkAuFu
-// siyamahmed3827
-
 
 
 
@@ -31,51 +27,85 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-
+        const usersCollection = client.db('fitness-tracker').collection('users')
+        const trainersCollection = client.db('fitness-tracker').collection('trainers')
         const newsletterCollection = client.db('fitness-tracker').collection('newsLetter')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
 
 
-        app.get('/infinityImg', async (req, res) => {
-            const cursor = infinityCollection.find();
+
+
+        // All TRainers Get 
+        app.get("/trainers", async (req, res) => {
+            const cursor = trainersCollection.find();
             const result = await cursor.toArray()
             res.send(result)
         })
+        //  specefic One user details API
 
+        app.get("/trainers/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            };
+            const result = await trainersCollection.findOne(query)
+            res.send(result)
+        })
+
+
+
+
+
+
+
+
+
+
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            res.send(result)
+        })
+
+        app.post("/users", async (req, res) => {
+            const user = req.body
+            const qurey = { email: user.email }
+            const existinUser = await usersCollection.findOne(qurey)
+            if (existinUser) {
+                return res.send({ messege: " user alredy exist", insertedId: null })
+            }
+            const result = await usersCollection.insertOne(user)
+        })
+
+        // app.get('/infinityImg', async (req, res) => {
+        //     const cursor = infinityCollection.find();
+        //     const result = await cursor.toArray()
+        //     res.send(result)
+        // })
+
+
+
+
+
+
+
+
+
+
+
+
+        app.get("/allSubscriber", async (req, res) => {
+            const cursor = newsletterCollection.find();
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
         app.post('/newsLetter', async (req, res) => {
             const newsLetter = req.body;
             const result = await newsletterCollection.insertOne(newsLetter);
             res.send(result)
         })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
