@@ -31,9 +31,17 @@ async function run() {
         const trainersCollection = client.db('fitness-tracker').collection('trainers')
         // const memberCollection = client.db('fitness-tracker').collection('member')
         const newsletterCollection = client.db('fitness-tracker').collection('newsLetter')
+        const classCollection = client.db('fitness-tracker').collection('class')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
 
 
+
+        //  all class get 
+        app.get("/class", async (req, res) => {
+            const cursor = classCollection.find();
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
 
         // All TRainers Get 
@@ -53,15 +61,42 @@ async function run() {
             res.send(result)
         })
 
+        //  specifit member get api 
+
+        app.get("/member/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            };
+            const result = await trainersCollection.findOne(query)
+            res.send(result)
+        })
+
+
+        app.patch("/users", async (req, res) => {
+            // const trainer = req.query.role;
+            const id = req.query.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+              $set: {
+                role: "trainer",
+              },
+            };
+            const result = await trainersCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+          });
+
+
+
         app.post('/addTrainer', async (req, res) => {
             const user = req.body;
             const result = await trainersCollection.insertOne(user);
             res.send(result)
         })
 
+
         app.get('/roleTrainer', async (req, res) => {
             // console.log(req.query.role);
-
             let query = {}
             if (req.query?.role) {
                 query = { role: req.query.role }
@@ -70,9 +105,8 @@ async function run() {
             res.send(result)
         })
 
-
+        //  member role qurery get
         app.get('/memberTrainer', async (req, res) => {
-            // console.log(req.query.role);
 
             let query = {}
             if (req.query?.role) {
@@ -85,9 +119,26 @@ async function run() {
 
 
 
+        app.get("/teamTrainer", async (req, res) => {
+            const cursor = await trainersCollection.find({ role: "trainer" }).limit(3).toArray();
+            res.send(cursor)
+        })
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+        //  user login and user data database add
 
 
         app.post('/users', async (req, res) => {
@@ -106,7 +157,7 @@ async function run() {
             const result = await usersCollection.insertOne(user)
         })
 
-       
+
 
 
 
@@ -154,12 +205,6 @@ async function run() {
     }
 }
 run().catch(console.dir);
-
-
-
-
-
-
 
 
 app.get('/', (req, res) => {
