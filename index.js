@@ -1,6 +1,7 @@
 const express = require('express')
 require("dotenv").config();
 const app = express()
+const jwt = require('jsonwebtoken');
 // const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
@@ -27,6 +28,8 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
+
+
         const usersCollection = client.db('fitness-tracker').collection('users')
         const trainersCollection = client.db('fitness-tracker').collection('trainers')
         // const memberCollection = client.db('fitness-tracker').collection('member')
@@ -34,6 +37,33 @@ async function run() {
         const classCollection = client.db('fitness-tracker').collection('class')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
 
+
+
+        //  JWT API 
+
+        app.post('/jwt', async (req, res) => {
+            const user = req.body
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10h' });
+            res.send({ token })
+        })
+
+        // middle wares
+
+        const verifyToken = (req, res, next) => {
+            // console.log("insede verify", req.headers.authorization);
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: "forbidden access" })
+            }
+            const token = req.headers.authorization.split(' ')[1];
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: "forbidden access" })
+                }
+                req.decoded = decoded;
+                next();
+            })
+
+        }
 
 
         //  all class get 
@@ -95,8 +125,7 @@ async function run() {
         })
 
 
-        app.get('/roleTrainer', async (req, res) => {
-            // console.log(req.query.role);
+        app.get('/roleTrainer', verifyToken, async (req, res) => {
             let query = {}
             if (req.query?.role) {
                 query = { role: req.query.role }
@@ -104,6 +133,8 @@ async function run() {
             const result = await trainersCollection.find(query).toArray();
             res.send(result)
         })
+
+
 
         //  member role qurery get
         app.get('/memberTrainer', async (req, res) => {
@@ -118,13 +149,6 @@ async function run() {
 
 
 
-        //  TODO : 
-
-        app.get("/teamTrainer", async (req, res) => {
-            const cursor = await trainersCollection.find({ role: "trainer" }).limit(3).toArray();
-            res.send(cursor)
-        })
-
 
         //  create a admin releted api
         //  TODO : 
@@ -137,8 +161,8 @@ async function run() {
                     role: 'admin'
                 }
             }
-            const result = await usersCollection.updateOne(filter , updatedDoc)
-            res.send(result) 
+            const result = await usersCollection.updateOne(filter, updatedDoc)
+            res.send(result)
         })
 
 
