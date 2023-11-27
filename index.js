@@ -78,13 +78,13 @@ async function run() {
             const id = req.query.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
-              $set: {
-                role: "trainer",
-              },
+                $set: {
+                    role: "trainer",
+                },
             };
             const result = await trainersCollection.updateOne(filter, updatedDoc);
             res.send(result);
-          });
+        });
 
 
 
@@ -118,12 +118,28 @@ async function run() {
 
 
 
+        //  TODO : 
 
         app.get("/teamTrainer", async (req, res) => {
             const cursor = await trainersCollection.find({ role: "trainer" }).limit(3).toArray();
             res.send(cursor)
         })
 
+
+        //  create a admin releted api
+        //  TODO : 
+
+        app.patch('/users/admin:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await usersCollection.updateOne(filter , updatedDoc)
+            res.send(result) 
+        })
 
 
 
