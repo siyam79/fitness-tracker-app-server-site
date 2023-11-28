@@ -2,6 +2,7 @@ const express = require('express')
 require("dotenv").config();
 const app = express()
 const jwt = require('jsonwebtoken');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 // const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000
@@ -167,7 +168,11 @@ async function run() {
 
 
 
+        // payment method api
 
+app.post('/create-payment-intent' , async(req , res )=>{
+    
+})
 
 
 
@@ -181,11 +186,11 @@ async function run() {
         //  user login and user data database add
 
 
-        app.post('/users', async (req, res) => {
-            const user = req.body;
-            const result = await usersCollection.insertOne(user);
-            res.send(result)
-        })
+        // app.post('/users', async (req, res) => {
+        //     const user = req.body;
+        //     const result = await usersCollection.insertOne(user);
+        //     res.send(result)
+        // })
 
         app.post("/users", async (req, res) => {
             const user = req.body
@@ -195,6 +200,7 @@ async function run() {
                 return res.send({ messege: " user alredy exist", insertedId: null })
             }
             const result = await usersCollection.insertOne(user)
+            res.send(result)
         })
 
 
