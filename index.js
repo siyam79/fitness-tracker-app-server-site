@@ -38,10 +38,9 @@ async function run() {
         const classCollection = client.db('fitness-tracker').collection('class')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
 
-
+        const paymentHistory = [];
 
         //  JWT API 
-
         app.post('/jwt', async (req, res) => {
             const user = req.body
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10h' });
@@ -126,7 +125,7 @@ async function run() {
         })
 
 
-        app.get('/roleTrainer', verifyToken, async (req, res) => {
+        app.get('/roleTrainer', async (req, res) => {
             let query = {}
             if (req.query?.role) {
                 query = { role: req.query.role }
@@ -136,9 +135,31 @@ async function run() {
         })
 
 
+        // app.get('/trainer/:trainerName', async (req, res) => {
+        //     const trainerName = req.params.trainerName;
+        //     const filter = { name: trainerName };
+        //     const result = await trainersCollection.findOne(filter);
+        //     res.send(result);
+        // })
+
+
+
+
+
+
+
 
         //  member role qurery get
         app.get('/memberTrainer', async (req, res) => {
+            let query = {}
+            if (req.query?.role) {
+                query = { role: req.query.role }
+            }
+            const result = await trainersCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        app.get('/admin', async (req, res) => {
 
             let query = {}
             if (req.query?.role) {
@@ -154,26 +175,76 @@ async function run() {
         //  create a admin releted api
         //  TODO : 
 
-        app.patch('/users/admin:id', async (req, res) => {
-            const id = req.params.id;
-            const filter = { _id: new ObjectId(id) };
-            const updatedDoc = {
-                $set: {
-                    role: 'admin'
-                }
-            }
-            const result = await usersCollection.updateOne(filter, updatedDoc)
-            res.send(result)
-        })
+        // app.patch('/users/admin:id', async (req, res) => {
+        //     const id = req.params.id;
+        //     const filter = { _id: new ObjectId(id) };
+        //     const updatedDoc = {
+        //         $set: {
+        //             role: 'admin'
+        //         }
+        //     }
+        //     const result = await usersCollection.updateOne(filter, updatedDoc)
+        //     res.send(result)
+        // })
 
 
 
         // payment method api
 
-app.post('/create-payment-intent' , async(req , res )=>{
-    
-})
+        // app.post('/create-payment-intent', async (req, res) => {
+        //     const { salary } = req.body
+        //     const amount = parseInt(salary * 100);
+        //     const paymentIntent = await stripe.paymentIntents.create({
+        //         amount: amount,
+        //         currency: "usd",
+        //         payment_method_types: ['card']
+        //     });
+        //     res.send({
+        //         clientSecret: paymentIntent.client_secret
+        //     })
+        // })
 
+
+
+        //  payment method 
+
+        app.post('/create-payment-intent', async (req, res) => {
+            try {
+                const { price, trainerId } = req.body;
+                const amount = parseInt(price * 100);
+                const userId = trainerId
+                console.log(trainerId);
+                const lastPayment = paymentHistory.find(payment => {
+                    return (
+                        payment.userId === userId &&
+                        new Date(payment.timestamp).getMonth() === new Date().getMonth()
+                    );
+                });
+
+                if (lastPayment) {
+                    // User has already made a payment in the current month
+                    return res.status(400).send({ error: 'User has already made a payment this month' });
+                }
+
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: amount,
+                    currency: 'usd',
+                    payment_method_types: ['card']
+                });
+                paymentHistory.push({
+                    userId: userId,
+                    timestamp: new Date().toISOString(),
+                    amount: amount
+                });
+
+                res.send({
+                    clientSecret: paymentIntent.client_secret
+                });
+            } catch (error) {
+                console.error('Error creating payment intent:', error);
+                res.status(500).send({ error: 'Error creating payment intent' });
+            }
+        });
 
 
 
