@@ -36,9 +36,12 @@ async function run() {
         // const memberCollection = client.db('fitness-tracker').collection('member')
         const newsletterCollection = client.db('fitness-tracker').collection('newsLetter')
         const classCollection = client.db('fitness-tracker').collection('class')
+        const paymentHistryCollection = client.db('fitness-tracker').collection('paymentHistry')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
 
         const paymentHistory = [];
+
+
 
         //  JWT API 
         app.post('/jwt', async (req, res) => {
@@ -70,6 +73,11 @@ async function run() {
         app.get("/class", async (req, res) => {
             const cursor = classCollection.find();
             const result = await cursor.toArray()
+            res.send(result)
+        })
+        app.post('/addClass', async (req, res) => {
+            const user = req.body;
+            const result = await classCollection.insertOne(user);
             res.send(result)
         })
 
@@ -115,6 +123,13 @@ async function run() {
             const result = await trainersCollection.updateOne(filter, updatedDoc);
             res.send(result);
         });
+
+        //  payment Histroy
+        // app.post('/paymentHistory', async (req, res) => {
+        //     const user = req.body;
+        //     const result = await paymentHistryCollection.insertOne(user);
+        //     res.send(result)
+        // })
 
 
 
