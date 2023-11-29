@@ -38,6 +38,7 @@ async function run() {
         const classCollection = client.db('fitness-tracker').collection('class')
         const paymentHistryCollection = client.db('fitness-tracker').collection('paymentHistry')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
+        const forumCollection = client.db('fitness-tracker').collection('forum')
 
         const paymentHistory = [];
 
@@ -81,7 +82,7 @@ async function run() {
 
 
         //  all class get 
-        app.get("/class",   async (req, res) => {
+        app.get("/class", async (req, res) => {
             const cursor = classCollection.find();
             const result = await cursor.toArray()
             res.send(result)
@@ -94,7 +95,7 @@ async function run() {
 
 
         // All TRainers Get 
-        app.get("/trainers",  async (req, res) => {
+        app.get("/trainers", async (req, res) => {
             const cursor = trainersCollection.find();
             const result = await cursor.toArray()
             res.send(result)
@@ -175,7 +176,7 @@ async function run() {
 
 
         //  member role qurery get
-        app.get('/memberTrainer',  async (req, res) => {
+        app.get('/memberTrainer', async (req, res) => {
             let query = {}
             if (req.query?.role) {
                 query = { role: req.query.role }
@@ -202,7 +203,7 @@ async function run() {
         //  create a admin releted api
         //  TODO : 
 
-        app.get('/users/admin/:email',  async (req, res) => {
+        app.get('/users/admin/:email', async (req, res) => {
             const email = req.params?.email;
             // if (email !== req.decoded?.email) {
             //     return res.status(403).send({ message: 'forbidden access'})
@@ -217,7 +218,7 @@ async function run() {
         })
 
 
-        app.get('/users/trainer/:email',  async (req, res) => {
+        app.get('/users/trainer/:email', async (req, res) => {
             const email = req.params?.email;
             // if (email !== req.decoded?.email) {
             //     return res.status(403).send({ message: 'forbidden access' })
@@ -299,6 +300,14 @@ async function run() {
             res.send(result)
         })
 
+
+
+        //  forumdata add 
+        app.post('/forum', async (req, res) => {
+            const forum = req.body;
+            const result = await forumCollection.insertOne(forum);
+            res.send(result)
+        })
 
 
 
