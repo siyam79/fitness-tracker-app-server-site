@@ -148,13 +148,75 @@ async function run() {
             res.send(result);
         });
 
-        //  payment Histroy
-        // app.post('/paymentHistory', async (req, res) => {
-        //     const user = req.body;
-        //     const result = await paymentHistryCollection.insertOne(user);
-        //     res.send(result)
-        // })
+        //  total balace get 
+        // app.get('/admin-state', async (req, res) => {
+        //     try {
+        //         const result = await paymentHistryCollection.aggregate([
+        //             {
+        //                 $group: {
+        //                     _id: null,
+        //                     totalRevenue: {
+        //                         $sum: '$money'
+        //                     }
+        //                 }
+        //             },
+        //             {
+        //                 $project: {
+        //                     _id: 0,
+        //                     salary: '$totalRevenue'
+        //                 }
+        //             }
+        //         ]).toArray();
 
+        //         console.log('Aggregation Result:', result);
+
+        //         if (result.length > 0) {
+        //             const salary = result[0].salary;
+        //             console.log('Found Salary:', salary);
+        //             res.send({
+        //                 salary
+        //             });
+        //         } else {
+        //             console.log('No Result Found. Returning {"salary": 0}');
+        //             res.send({
+        //                 salary: 0
+        //             });
+        //         }
+        //     } catch (error) {
+        //         console.error('Error in admin-state route:', error);
+        //         res.status(500).send({
+        //             error: 'Internal Server Error'
+        //         });
+        //     }
+        // });
+
+
+
+
+        app.get('/admin-state', async (req, res) => {
+            const payment = await paymentHistryCollection.estimatedDocumentCount()
+            const payments  = await paymentHistryCollection.find().toArray()
+            const revenue = payments.reduce((total , pay ) => total + pay.money , 0);
+
+            const result = await paymentHistryCollection.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalRevenue: {
+                            $sum: '$money'
+                        }
+                    }
+                },
+
+            ]).toArray()
+            const salary = result.length > 0 ? result[0].totalRevenue : 0;
+
+            res.send({
+                salary,
+                payment,
+                revenue
+            })
+        })
 
 
         app.post('/addTrainer', async (req, res) => {
@@ -279,15 +341,15 @@ async function run() {
 
         app.post('/paymentHistory', async (req, res) => {
             const payment = req.body;
-    
+
             const result = await paymentHistryCollection.insertOne(payment);
-            console.log('payment info', payment);
+            // console.log('payment info', payment);
             res.send(result)
         })
 
         // payment data get 
-        app.get("/", async (req, res) => {
-            const cursor = newsletterCollection.find();
+        app.get("/paymentHistory", async (req, res) => {
+            const cursor = paymentHistryCollection.find();
             const result = await cursor.toArray()
             res.send(result)
         })
