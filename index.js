@@ -33,7 +33,6 @@ async function run() {
 
         const usersCollection = client.db('fitness-tracker').collection('users')
         const trainersCollection = client.db('fitness-tracker').collection('trainers')
-        // const memberCollection = client.db('fitness-tracker').collection('member')
         const newsletterCollection = client.db('fitness-tracker').collection('newsLetter')
         const classCollection = client.db('fitness-tracker').collection('class')
         const paymentHistryCollection = client.db('fitness-tracker').collection('paymentHistry')
@@ -278,8 +277,20 @@ async function run() {
             }
         });
 
+        app.post('/paymentHistory', async (req, res) => {
+            const payment = req.body;
+    
+            const result = await paymentHistryCollection.insertOne(payment);
+            console.log('payment info', payment);
+            res.send(result)
+        })
 
-
+        // payment data get 
+        app.get("/", async (req, res) => {
+            const cursor = newsletterCollection.find();
+            const result = await cursor.toArray()
+            res.send(result)
+        })
 
 
 
@@ -299,7 +310,6 @@ async function run() {
             const result = await usersCollection.insertOne(user)
             res.send(result)
         })
-
 
 
         //  forumdata add 
