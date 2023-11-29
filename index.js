@@ -55,12 +55,12 @@ async function run() {
         const verifyToken = (req, res, next) => {
             // console.log("insede verify", req.headers.authorization);
             if (!req.headers.authorization) {
-                return res.status(401).send({ message: "forbidden access" })
+                return res.status(401).send({ message: "unauthorized access" })
             }
             const token = req.headers.authorization.split(' ')[1];
             jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
                 if (err) {
-                    return res.status(401).send({ message: "forbidden access" })
+                    return res.status(401).send({ message: "unauthorized access" })
                 }
                 req.decoded = decoded;
                 next();
@@ -68,9 +68,20 @@ async function run() {
 
         }
 
+        // const verifyAdmin = async (req, res, next) => {
+        //     const email = req.decoded.email;
+        //     const query = { email: email }
+        //     const user = await trainersCollection.findOne(query)
+        //     const isAdmin = user?.role === "admin"
+        //     if (!isAdmin) {
+        //         return res.status(403).send({ message: 'forbidden access' })
+        //     }
+        //     next()
+        // }
+
 
         //  all class get 
-        app.get("/class", async (req, res) => {
+        app.get("/class",   async (req, res) => {
             const cursor = classCollection.find();
             const result = await cursor.toArray()
             res.send(result)
@@ -83,7 +94,7 @@ async function run() {
 
 
         // All TRainers Get 
-        app.get("/trainers", async (req, res) => {
+        app.get("/trainers",  async (req, res) => {
             const cursor = trainersCollection.find();
             const result = await cursor.toArray()
             res.send(result)
@@ -124,6 +135,19 @@ async function run() {
             res.send(result);
         });
 
+        app.patch("/user", async (req, res) => {
+            // const trainer = req.query.role;
+            const id = req.query.id;
+            const filter = { _id: new ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status: "paid",
+                },
+            };
+            const result = await trainersCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        });
+
         //  payment Histroy
         // app.post('/paymentHistory', async (req, res) => {
         //     const user = req.body;
@@ -150,22 +174,8 @@ async function run() {
         })
 
 
-        // app.get('/trainer/:trainerName', async (req, res) => {
-        //     const trainerName = req.params.trainerName;
-        //     const filter = { name: trainerName };
-        //     const result = await trainersCollection.findOne(filter);
-        //     res.send(result);
-        // })
-
-
-
-
-
-
-
-
         //  member role qurery get
-        app.get('/memberTrainer', async (req, res) => {
+        app.get('/memberTrainer',  async (req, res) => {
             let query = {}
             if (req.query?.role) {
                 query = { role: req.query.role }
@@ -173,6 +183,8 @@ async function run() {
             const result = await trainersCollection.find(query).toArray();
             res.send(result)
         })
+
+
 
         app.get('/admin', async (req, res) => {
 
@@ -190,34 +202,38 @@ async function run() {
         //  create a admin releted api
         //  TODO : 
 
-        // app.patch('/users/admin:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const filter = { _id: new ObjectId(id) };
-        //     const updatedDoc = {
-        //         $set: {
-        //             role: 'admin'
-        //         }
-        //     }
-        //     const result = await usersCollection.updateOne(filter, updatedDoc)
-        //     res.send(result)
-        // })
+        app.get('/users/admin/:email',  async (req, res) => {
+            const email = req.params?.email;
+            // if (email !== req.decoded?.email) {
+            //     return res.status(403).send({ message: 'forbidden access'})
+            // }
+            const query = { email: email };
+            const user = await trainersCollection.findOne(query)
+            let admin = false;
+            if (user) {
+                admin = user?.role === "admin"
+            }
+            res.send({ admin })
+        })
+
+
+        app.get('/users/trainer/:email',  async (req, res) => {
+            const email = req.params?.email;
+            // if (email !== req.decoded?.email) {
+            //     return res.status(403).send({ message: 'forbidden access' })
+            // }
+            const query = { email: email };
+            const user = await trainersCollection.findOne(query)
+            let trainer = false;
+            if (user) {
+                trainer = user?.role === "trainer"
+            }
+            res.send({ trainer })
+        })
 
 
 
-        // payment method api
 
-        // app.post('/create-payment-intent', async (req, res) => {
-        //     const { salary } = req.body
-        //     const amount = parseInt(salary * 100);
-        //     const paymentIntent = await stripe.paymentIntents.create({
-        //         amount: amount,
-        //         currency: "usd",
-        //         payment_method_types: ['card']
-        //     });
-        //     res.send({
-        //         clientSecret: paymentIntent.client_secret
-        //     })
-        // })
 
 
 
@@ -272,12 +288,6 @@ async function run() {
         //  user login and user data database add
 
 
-        // app.post('/users', async (req, res) => {
-        //     const user = req.body;
-        //     const result = await usersCollection.insertOne(user);
-        //     res.send(result)
-        // })
-
         app.post("/users", async (req, res) => {
             const user = req.body
             const qurey = { email: user.email }
@@ -288,15 +298,6 @@ async function run() {
             const result = await usersCollection.insertOne(user)
             res.send(result)
         })
-
-
-
-
-
-
-
-
-
 
 
 
