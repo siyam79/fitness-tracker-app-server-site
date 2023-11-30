@@ -12,7 +12,13 @@ const cors = require('cors')
 
 // middleware 
 app.use(express.json());
-app.use(cors())
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+
+    ],
+    credentials: true,
+}))
 
 
 
@@ -151,7 +157,7 @@ async function run() {
         });
 
         //  total balace get 
-      
+
 
 
 
@@ -205,7 +211,7 @@ async function run() {
 
 
         //  member role qurery get
-        app.get('/memberTrainer' , async (req, res) => {
+        app.get('/memberTrainer', async (req, res) => {
             let query = {}
             if (req.query?.role) {
                 query = { role: req.query.role }
@@ -226,9 +232,9 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/user/:email',  async (req, res) => {
+        app.get('/user/:email', async (req, res) => {
             // console.log(req.query.email);
-           
+
             let query = {}
             if (req.query?.email) {
                 query = { email: req.query.email }
@@ -331,7 +337,7 @@ async function run() {
         })
 
         // payment data get 
-        app.get("/paymentHistory",verifyToken, async (req, res) => {
+        app.get("/paymentHistory", verifyToken, async (req, res) => {
             const cursor = paymentHistryCollection.find();
             const result = await cursor.toArray()
             res.send(result)
@@ -344,7 +350,7 @@ async function run() {
         })
 
 
-       
+
 
 
 
@@ -370,6 +376,49 @@ async function run() {
             const result = await forumCollection.insertOne(forum);
             res.send(result)
         })
+
+
+        app.put("/forums/:id", async (req, res) => {
+            try {
+                const email = req.body.email;
+                console.log(email);
+                const forumId = req.params.id;
+                const query = { _id: new ObjectId(forumId) };
+                console.log(query);
+                const forum = await forumCollection.findOne(query);
+                console.log(forum);
+
+                if (forum?.likedBy === email) {
+                    console.log('data');
+                    const updateDoc = {
+                        $set: { likes: forum.likes - 1, likedBy: "" },
+                    };
+                    const result = await forumCollection.updateOne(query, updateDoc, {
+                        upsert: false,
+
+                    });
+                    console.log(result);
+                    res.send(result);
+                    return;
+                }
+                const updateDoc = {
+                    $set: { likes: forum.likes + 1, likedBy: email },
+                };
+                const result = await forumCollection.updateOne(query, updateDoc, {
+                    upsert: false,
+                });
+                res.send(result);
+            } catch (error) {
+                res
+                    .status(500)
+                    .send({ error: true, message: "There was a server side error" });
+            }
+        });
+
+
+
+
+
 
 
 
