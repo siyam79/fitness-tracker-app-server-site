@@ -38,6 +38,7 @@ async function run() {
         const paymentHistryCollection = client.db('fitness-tracker').collection('paymentHistry')
         const infinityCollection = client.db('fitness-tracker').collection('infinityImg')
         const forumCollection = client.db('fitness-tracker').collection('forum')
+        const subscriptionCollection = client.db('fitness-tracker').collection('plans')
 
         const paymentHistory = [];
 
@@ -121,7 +122,7 @@ async function run() {
             res.send(result)
         })
 
-
+        // admin verify
         app.patch("/users", async (req, res) => {
             // const trainer = req.query.role;
             const id = req.query.id;
@@ -134,6 +135,7 @@ async function run() {
             const result = await trainersCollection.updateOne(filter, updatedDoc);
             res.send(result);
         });
+
 
         app.patch("/user", async (req, res) => {
             // const trainer = req.query.role;
@@ -149,54 +151,14 @@ async function run() {
         });
 
         //  total balace get 
-        // app.get('/admin-state', async (req, res) => {
-        //     try {
-        //         const result = await paymentHistryCollection.aggregate([
-        //             {
-        //                 $group: {
-        //                     _id: null,
-        //                     totalRevenue: {
-        //                         $sum: '$money'
-        //                     }
-        //                 }
-        //             },
-        //             {
-        //                 $project: {
-        //                     _id: 0,
-        //                     salary: '$totalRevenue'
-        //                 }
-        //             }
-        //         ]).toArray();
-
-        //         console.log('Aggregation Result:', result);
-
-        //         if (result.length > 0) {
-        //             const salary = result[0].salary;
-        //             console.log('Found Salary:', salary);
-        //             res.send({
-        //                 salary
-        //             });
-        //         } else {
-        //             console.log('No Result Found. Returning {"salary": 0}');
-        //             res.send({
-        //                 salary: 0
-        //             });
-        //         }
-        //     } catch (error) {
-        //         console.error('Error in admin-state route:', error);
-        //         res.status(500).send({
-        //             error: 'Internal Server Error'
-        //         });
-        //     }
-        // });
-
+      
 
 
 
         app.get('/admin-state', async (req, res) => {
             const payment = await paymentHistryCollection.estimatedDocumentCount()
-            const payments  = await paymentHistryCollection.find().toArray()
-            const revenue = payments.reduce((total , pay ) => total + pay.money , 0);
+            const payments = await paymentHistryCollection.find().toArray()
+            const revenue = payments.reduce((total, pay) => total + pay.money, 0);
 
             const result = await paymentHistryCollection.aggregate([
                 {
@@ -225,6 +187,12 @@ async function run() {
             res.send(result)
         })
 
+        app.post('/plancard', async (req, res) => {
+            const user = req.body;
+            const result = await subscriptionCollection.insertOne(user);
+            res.send(result)
+        })
+
 
         app.get('/roleTrainer', async (req, res) => {
             let query = {}
@@ -237,7 +205,7 @@ async function run() {
 
 
         //  member role qurery get
-        app.get('/memberTrainer', async (req, res) => {
+        app.get('/memberTrainer' , async (req, res) => {
             let query = {}
             if (req.query?.role) {
                 query = { role: req.query.role }
@@ -348,8 +316,14 @@ async function run() {
         })
 
         // payment data get 
-        app.get("/paymentHistory", async (req, res) => {
+        app.get("/paymentHistory",verifyToken, async (req, res) => {
             const cursor = paymentHistryCollection.find();
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
+        app.get("/forum", async (req, res) => {
+            const cursor = forumCollection.find();
             const result = await cursor.toArray()
             res.send(result)
         })
