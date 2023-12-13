@@ -1,4 +1,4 @@
-## project Name ::  Fitness | Track 
+## project Name ::  Fitness | Tracker
 
 ### The main point of the project
 # The main purpose of our project is to inspire people on a healthy, safe, and fulfilling lifestyle
